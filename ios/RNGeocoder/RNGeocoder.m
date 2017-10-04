@@ -1,3 +1,4 @@
+@import MapKit;
 #import "RNGeocoder.h"
 
 #import <CoreLocation/CoreLocation.h>
@@ -53,26 +54,31 @@ RCT_EXPORT_METHOD(geocodeAddress:(NSString *)address
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 {
-    if (!self.geocoder) {
-        self.geocoder = [[CLGeocoder alloc] init];
-    }
-
-    if (self.geocoder.geocoding) {
-      [self.geocoder cancelGeocode];
-    }
-
-    [self.geocoder geocodeAddressString:address completionHandler:^(NSArray *placemarks, NSError *error) {
-
+    MKLocalSearchRequest *request = [MKLocalSearchRequest new];
+    request.naturalLanguageQuery = address;
+    
+    MKLocalSearch *search = [[MKLocalSearch alloc] initWithRequest:request];
+    [search startWithCompletionHandler:^(MKLocalSearchResponse *response, NSError *error) {
+        
         if (error) {
             if (placemarks.count == 0) {
-              return reject(@"NOT_FOUND", @"geocodeAddress failed", error);
+                return reject(@"NOT_FOUND", @"geocodeAddress failed", error);
             }
-
+            
             return reject(@"ERROR", @"geocodeAddress failed", error);
         }
-
-        resolve([self placemarksToDictionary:placemarks]);
-  }];
+        
+        NSMutableArray *placemarks = @[];
+        NSArray<MKMapItem *> *mapItems = response.mapItems;
+        for (MKMapItem *item in mapItems) {
+            if (item.placemark) {
+                [placemarks addObject:item.placemark];
+            }
+        }
+        
+        resolve([self placemarksToDictionary:[placemarks copy]]);
+        
+    }];
 }
 
 - (NSArray *)placemarksToDictionary:(NSArray *)placemarks {
