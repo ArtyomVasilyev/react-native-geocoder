@@ -60,16 +60,17 @@ RCT_EXPORT_METHOD(geocodeAddress:(NSString *)address
     MKLocalSearch *search = [[MKLocalSearch alloc] initWithRequest:request];
     [search startWithCompletionHandler:^(MKLocalSearchResponse *response, NSError *error) {
         
+        NSArray<MKMapItem *> *mapItems = response.mapItems;
+        
         if (error) {
-            if (placemarks.count == 0) {
+            if (mapItems.count == 0) {
                 return reject(@"NOT_FOUND", @"geocodeAddress failed", error);
             }
             
             return reject(@"ERROR", @"geocodeAddress failed", error);
         }
         
-        NSMutableArray *placemarks = @[];
-        NSArray<MKMapItem *> *mapItems = response.mapItems;
+        NSMutableArray *placemarks = [NSMutableArray new];
         for (MKMapItem *item in mapItems) {
             if (item.placemark) {
                 [placemarks addObject:item.placemark];
