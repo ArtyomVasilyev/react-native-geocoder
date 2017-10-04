@@ -56,6 +56,8 @@ RCT_EXPORT_METHOD(geocodeAddress:(NSString *)address
 {
     MKLocalSearchRequest *request = [MKLocalSearchRequest new];
     request.naturalLanguageQuery = address;
+    MKCoordinateRegion worldRegion = MKCoordinateRegionForMapRect(MKMapRectWorld);
+    request.region = worldRegion;
     
     MKLocalSearch *search = [[MKLocalSearch alloc] initWithRequest:request];
     [search startWithCompletionHandler:^(MKLocalSearchResponse *response, NSError *error) {
